@@ -1,8 +1,29 @@
-const { Client } = require("pg"); // imports the pg module
+const PORT = 3000;
+const express = require("express");
+const server = express();
 
-// supply the db name and location of the database
-const client = new Client("postgres://localhost:5432/juicebox-dev");
+const bodyParser = require("body-parser");
+server.use(bodyParser.json());
 
-module.exports = {
-  client,
-};
+const morgan = require("morgan");
+server.use(morgan("dev"));
+
+
+
+server.use((req, res, next) => {
+  console.log("<____Body Logger START____>");
+  console.log(req.body);
+  console.log("<_____Body Logger END_____>");
+
+  next();
+});
+
+const apiRouter = require("./api");
+server.use("/api", apiRouter);
+
+const { client } = require("./db");
+client.connect();
+
+server.listen(PORT,"localhost", () => {
+  console.log("The server is up on port", PORT);
+});
