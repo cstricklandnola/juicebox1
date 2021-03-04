@@ -5,6 +5,8 @@ const { Client } = require("pg"); // imports the pg module
 // supply the db name and location of the database
 const client = new Client("postgres://localhost:5432/juicebox-dev");
 
+
+
 async function createUser({
   username,
   password,
@@ -25,12 +27,11 @@ async function createUser({
   }
 }
 
-
 async function updateUser(id, fields = {}) {
   // build the set string
-  const setString = Object.keys(fields).map(
-    (key, index) => `"${key}"=$${index + 1}`
-  ).join(', ');
+  const setString = Object.keys(fields)
+    .map((key, index) => `"${key}"=$${index + 1}`)
+    .join(", ");
 
   // return early if this is called without fields
   if (setString.length === 0) {
@@ -38,18 +39,24 @@ async function updateUser(id, fields = {}) {
   }
 
   try {
-    const { rows: [user] } = await client.query(`
+    const {
+      rows: [user],
+    } = await client.query(
+      `
       UPDATE users
-      SET  ${setString}
-      WHERE id=${ id }
+      SET ${setString}
+      WHERE id=${id}
       RETURNING *;
-    `, Object.values(fields));
+    `,
+      Object.values(fields)
+    );
 
     return user;
   } catch (error) {
     throw error;
   }
 }
+
 
 async function getAllUsers() {
   try{
@@ -84,6 +91,8 @@ async function getUserById(userId) {
   }
 }
 
+
+
 async function createPost({
     authorId,
     title,
@@ -105,6 +114,7 @@ async function createPost({
       throw error;
     }
   }
+
 async function updatePost(postId, fields = {}) {
   
   const { tags } = fields; // might be undefined
@@ -201,6 +211,17 @@ async function getPostById(postId) {
     throw error;
   }
 }
+
+async function getUserByUsername(username) {  try {    const { rows: [ user ] } = await client.query(`
+SELECT *
+  FROM users
+ WHERE username=$1    `,
+ [ username ]);
+    if (!user) {
+     throw {        name: "UserNotFoundError",        message: "A user with that username does not exist"      }    }
+    return user;  }
+catch (error) {
+throw error;  }}
     
     
     async function getPostsByUser(userId) {
@@ -310,7 +331,6 @@ async function getAllTags() {
     
     
 module.exports = {
-
   client,
   getAllUsers,
   createUser,
@@ -325,7 +345,8 @@ module.exports = {
   addTagsToPost,
   createTags,
   getPostsByTagName,
-  getAllTags
+  getAllTags,
+  getUserByUsername
 };
 
 
